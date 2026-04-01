@@ -1,0 +1,17 @@
+<h2>User Profile</h2>
+
+<form method="POST" action="{% url 'updateProfile' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <input type="text" name="first_name" value="{{ request.user.first_name }}" placeholder="Name">
+    <input type="email" name="email" value="{{ request.user.email }}" placeholder="Email">
+    <input type="text" name="phone" value="{{ profile.phone }}" placeholder="Phone">
+
+    <input type="file" name="profile_pic">
+
+    <button type="submit">Update</button>
+</form>
+
+{% if profile.profile_pic %}
+    <img src="{{ profile.profile_pic.url }}" width="150">
+{% endif %}

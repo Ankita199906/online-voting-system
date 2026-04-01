@@ -1,0 +1,144 @@
+{% extends 'root.html' %}
+{% load static %}
+{% block content %}
+
+<section class="content">
+
+  <!-- Statistics Boxes -->
+  <div class="row">
+
+    <div class="col-lg-3 col-xs-6">
+      <div class="small-box bg-aqua">
+        <div class="inner">
+          <h3>{{ position_count }}</h3>
+          <p>No. of Positions</p>
+        </div>
+        <div class="icon">
+          <i class="fa fa-tasks"></i>
+        </div>
+        <a href="{% url 'viewPositions' %}" class="small-box-footer">
+          More Info <i class="fa fa-arrow-circle-right"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-xs-6">
+      <div class="small-box bg-green">
+        <div class="inner">
+          <h3>{{ candidate_count }}</h3>
+          <p>No. of Candidates</p>
+        </div>
+        <div class="icon">
+          <i class="fa fa-black-tie"></i>
+        </div>
+        <a href="{% url 'viewCandidates' %}" class="small-box-footer">
+          More Info <i class="fa fa-arrow-circle-right"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-xs-6">
+      <div class="small-box bg-blue">
+        <div class="inner">
+          <h3>{{ voters_count }}</h3>
+          <p>Total Voters</p>
+        </div>
+        <div class="icon">
+          <i class="fa fa-users"></i>
+        </div>
+        <a href="{% url 'adminViewVoters' %}" class="small-box-footer">
+          More Info <i class="fa fa-arrow-circle-right"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-xs-6">
+      <div class="small-box bg-maroon">
+        <div class="inner">
+          <h3>{{ voted_voters_count }}</h3>
+          <p>Voters Voted</p>
+        </div>
+        <div class="icon">
+          <i class="fa fa-edit"></i>
+        </div>
+        <a href="{% url 'viewVotes' %}" class="small-box-footer">
+          More Info <i class="fa fa-arrow-circle-right"></i>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- Votes Tally -->
+  <div class="row">
+    <div class="col-xs-12">
+      <h3>Votes Tally</h3>
+    </div>
+  </div>
+
+
+  {% for position in positions %}
+      {% if forloop.counter0|divisibleby:2 %}
+      <div class="row">
+      {% endif %}
+
+      <div class="col-sm-6">
+        <div class="box box-solid">
+          <div class="box-header with-border">
+            <h4 class="box-title"><b>{{ position.name }}</b></h4>
+          </div>
+          <div class="box-body">
+            <canvas id="{{ position.name|slugify }}" style="height:200px"></canvas>
+          </div>
+        </div>
+      </div>
+
+      {% if forloop.counter|divisibleby:2 or forloop.last %}
+      </div>
+      {% endif %}
+  {% endfor %}
+
+</section>
+
+{% endblock content %}
+
+
+{% block custom_js %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% for key, value in chart_data.items %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    var ctx = document.getElementById("{{ key|slugify }}");
+
+    if (ctx) {
+
+        var chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ value.candidates|safe }},
+                datasets: [{
+                    label: 'Votes',
+                    data: {{ value.votes|safe }},
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+    }
+});
+</script>
+{% endfor %}
+
+{% endblock custom_js %}

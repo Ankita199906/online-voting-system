@@ -1,0 +1,184 @@
+{% extends 'root.html' %}
+{% block content %}
+
+<style>
+/* Page Styling */
+.title {
+    margin-bottom: 30px;
+    font-weight: 600;
+}
+
+.ballot-container {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+
+/* Buttons */
+.action-buttons {
+    margin-top: 25px;
+}
+
+.action-buttons .btn {
+    min-width: 140px;
+    margin: 5px;
+    border-radius: 25px;
+}
+
+/* Alert */
+#alert {
+    border-radius: 8px;
+}
+
+/* Modal polish */
+.modal-content {
+    border-radius: 12px;
+}
+
+.modal-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-title {
+    font-weight: 600;
+}
+</style>
+
+<section class="content">
+  <h1 class="page-header text-center title"><b>{{ TITLE }}</b></h1>
+
+  <div class="row">
+    <div class="col-sm-10 col-sm-offset-1">
+      
+      <div class="ballot-container">
+
+        <div class="alert alert-danger alert-dismissible" id="alert" style="display:none;">
+          <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+          <span class="message"></span>
+        </div>
+
+        <form method="POST" id="ballotForm" action="{% url 'submit_ballot' %}">
+          {% csrf_token %}
+          
+          {{ ballot|safe }}
+
+          <div class="text-center action-buttons">
+            <button type="button" class="btn btn-success" id="preview">
+              <i class="fa fa-file-text"></i> Preview
+            </button>
+            <button type="submit" class="btn btn-primary" name="submit_vote">
+              <i class="fa fa-check-square-o"></i> Submit Vote
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}
+
+
+{% block custom_js %}
+<script>
+  $(function() {
+
+      $('.content').iCheck({
+          checkboxClass: 'icheckbox_flat-green',
+          radioClass: 'iradio_flat-green'
+      });
+
+      $(document).on('click', '.reset', function(e) {
+          e.preventDefault();
+          var desc = $(this).data('desc');
+          $('.' + desc).iCheck('uncheck');
+      });
+
+      $(document).on('click', '.platform', function(e) {
+          e.preventDefault();
+          $('#bio').modal('show');
+          var platform = $(this).data('bio');
+          var fullname = $(this).data('fullname');
+          $('.candidate').html(fullname);
+          $('#plat_view').html(platform);
+      });
+
+      $('#preview').click(function(e) {
+          e.preventDefault();
+          var form = $('#ballotForm').serialize();
+
+          if (form.search("&") < 0 || form == '') {
+              toastr.error('You must vote at least one candidate', "Preview Error");
+          } else {
+              $.ajax({
+                  type: 'POST',
+                  url: '{% url "preview_vote" %}',
+                  data: form,
+                  dataType: 'json',
+                  success: function(response) {
+                      if (response.error) {
+                          var errmsg = '';
+                          var messages = response.message;
+                          for (i in messages) {
+                              errmsg += messages[i];
+                          }
+                          toastr.error(errmsg, "Preview Error")
+                      } else {
+                          $('#preview_modal').modal('show');
+                          $('#preview_body').html(response.list);
+                      }
+                  }
+              });
+          }
+      });
+
+  });
+</script>
+{% endblock custom_js %}
+
+
+{% block modal %}
+
+<!-- Candidate Bio Modal -->
+<div class="modal fade" id="bio">
+  <div class="modal-dialog">
+      <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title"><b><span class="candidate"></span></b></h4>
+          </div>
+          <div class="modal-body">
+            <p id="plat_view"></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">
+              <i class="fa fa-close"></i> Close
+            </button>
+          </div>
+      </div>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="preview_modal">
+  <div class="modal-dialog">
+      <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Vote Preview</h4>
+          </div>
+          <div class="modal-body">
+            <div id="preview_body"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">
+              <i class="fa fa-close"></i> Close
+            </button>
+          </div>
+      </div>
+  </div>
+</div>
+
+{% endblock modal %}

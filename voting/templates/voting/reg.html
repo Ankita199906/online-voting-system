@@ -1,0 +1,104 @@
+{% extends "voting/base.html" %}
+{% block content %}
+
+<div class="login-box" style="width:450px;">
+    <div class="login-logo">
+        <b>Voting System</b>
+    </div>
+
+    <div class="login-box-body">
+        <form action="{% url 'account_register' %}" method="POST">
+            {% csrf_token %}
+
+            <div class="modal-body">
+                {% for field in form1 %}
+                <div class="form-group has-feedback">
+                    <span class="text-danger">{{field.errors}}</span>
+                    {{field.label_tag}}
+                    {{field}}
+                </div>
+                {% endfor %}
+
+                {% for field in form2 %}
+                <div class="form-group has-feedback">
+                    <span class="text-danger">{{field.errors}}</span>
+                    {{field.label_tag}}
+                    {{field}}
+                </div>
+                {% endfor %}
+
+                <!-- Face Capture Section -->
+                <div class="form-group">
+                    <label>📷 Capture Face Photo <span class="text-danger">(Required for login)</span></label>
+                    <div style="text-align:center;">
+                        <video id="video" width="100%" height="200" autoplay style="border-radius:8px; border:2px solid #ddd;"></video>
+                        <canvas id="canvas" width="300" height="200" style="display:none;"></canvas>
+                    </div>
+                    <img id="captured-image" src="" style="width:100%; border-radius:8px; display:none; margin-top:5px;" />
+                    <input type="hidden" name="face_data" id="face_data">
+                    <div style="margin-top:8px; text-align:center;">
+                        <button type="button" class="btn btn-info btn-sm" onclick="capturePhoto()">
+                            <i class="fa fa-camera"></i> Capture Face
+                        </button>
+                        <button type="button" class="btn btn-warning btn-sm" onclick="retakePhoto()" id="retake-btn" style="display:none;">
+                            <i class="fa fa-refresh"></i> Retake
+                        </button>
+                    </div>
+                    <p id="face-status" style="text-align:center; margin-top:5px; font-size:12px; color:green;"></p>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-6">
+                        <button type="submit" class="btn btn-primary btn-block btn-flat">
+                            <i class="fa fa-user-plus"></i> Register
+                        </button>
+                    </div>
+                    <div class="pull-right col-xs-6">
+                        <a class="btn btn-success btn-block btn-flat" href="{% url 'account_login' %}">
+                            <i class="fa fa-sign-in"></i> Log In
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const capturedImage = document.getElementById('captured-image');
+    const faceData = document.getElementById('face_data');
+    const faceStatus = document.getElementById('face-status');
+    const retakeBtn = document.getElementById('retake-btn');
+
+    // Start webcam
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => { video.srcObject = stream; })
+        .catch(err => {
+            faceStatus.style.color = 'red';
+            faceStatus.textContent = 'Camera not accessible. Please allow camera access.';
+        });
+
+    function capturePhoto() {
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataURL = canvas.toDataURL('image/jpeg');
+        faceData.value = dataURL;
+        capturedImage.src = dataURL;
+        capturedImage.style.display = 'block';
+        video.style.display = 'none';
+        retakeBtn.style.display = 'inline-block';
+        faceStatus.textContent = '✅ Face captured! You can now register.';
+    }
+
+    function retakePhoto() {
+        video.style.display = 'block';
+        capturedImage.style.display = 'none';
+        faceData.value = '';
+        retakeBtn.style.display = 'none';
+        faceStatus.textContent = '';
+    }
+</script>
+
+{% endblock content %}
